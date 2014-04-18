@@ -27,52 +27,52 @@ import com.google.android.apps.muzei.api.Artwork;
 import com.google.android.apps.muzei.api.RemoteMuzeiArtSource;
 
 public class GoProArtSource extends RemoteMuzeiArtSource {
-	private static final String TAG = "GoProArtSource";
-	private static final String SOURCE_NAME = "GoProArtSource";
+    private static final String TAG = "GoProArtSource";
+    private static final String SOURCE_NAME = "GoProArtSource";
 
-	private static final int ROTATE_TIME_MILLIS = 3 * 60 * 60 * 1000; // rotate every 3 hours
+    private static final int ROTATE_TIME_MILLIS = 6 * 60 * 60 * 1000; // rotate every 3 hours
 
-	public GoProArtSource() {
-		super(SOURCE_NAME);
-	}
+    public GoProArtSource() {
+        super(SOURCE_NAME);
+    }
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
-	}
+    @Override
+    public void onCreate() {
+        super.onCreate();
+    }
 
-	@Override
-	protected void onTryUpdate(int reason) throws RetryException {
-		RestAdapter restAdapter = new RestAdapter.Builder()
-		.setServer("http://gopro.com")
-		.setErrorHandler(new ErrorHandler() {
-			@Override
-			public Throwable handleError(RetrofitError retrofitError) {
-				int statusCode = retrofitError.getResponse().getStatus();
-				if (retrofitError.isNetworkError()
-						|| (500 <= statusCode && statusCode < 600)) {
-					return new RetryException();
-				}
-				scheduleUpdate(System.currentTimeMillis() + ROTATE_TIME_MILLIS);
-				return retrofitError;
-			}
-		})
-		.build();
+    @Override
+    protected void onTryUpdate(int reason) throws RetryException {
+        RestAdapter restAdapter = new RestAdapter.Builder()
+        .setServer("http://gopro.com")
+        .setErrorHandler(new ErrorHandler() {
+            @Override
+            public Throwable handleError(RetrofitError retrofitError) {
+                int statusCode = retrofitError.getResponse().getStatus();
+                if (retrofitError.isNetworkError()
+                        || (500 <= statusCode && statusCode < 600)) {
+                    return new RetryException();
+                }
+                scheduleUpdate(System.currentTimeMillis() + ROTATE_TIME_MILLIS);
+                return retrofitError;
+            }
+        })
+        .build();
 
-		GoProMediaService service = restAdapter.create(GoProMediaService.class);
-		MediaOfTheDay response = service.getMediaOfTheDay();
+        GoProMediaService service = restAdapter.create(GoProMediaService.class);
+        MediaOfTheDay response = service.getMediaOfTheDay();
 
-		if (response == null || response.pod == null) {
-			throw new RetryException();
-		}
+        if (response == null || response.pod == null) {
+            throw new RetryException();
+        }
 
-		publishArtwork(new Artwork.Builder()
-		.title(response.pod.title)
-		.imageUri(Uri.parse(response.pod.xl.image))
-		.viewIntent(new Intent(Intent.ACTION_VIEW,
-				Uri.parse("http://gopro.com/photos/photo-of-the-day")))
-				.build());
+        publishArtwork(new Artwork.Builder()
+        .title(response.pod.title)
+        .imageUri(Uri.parse(response.pod.l.image))
+        .viewIntent(new Intent(Intent.ACTION_VIEW,
+                Uri.parse("http://gopro.com/photos/photo-of-the-day")))
+                .build());
 
-		scheduleUpdate(System.currentTimeMillis() + ROTATE_TIME_MILLIS);
-	}
+        scheduleUpdate(System.currentTimeMillis() + ROTATE_TIME_MILLIS);
+    }
 }
